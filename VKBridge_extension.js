@@ -2,6 +2,7 @@ Scratch.extensions.register(new (class VKBridgeExtension {
     constructor() {
         this.initialized = false;
         this.userData = {};
+        this.viewHidden = false;
 
         // VK Bridge load and initialization
         this.loadVKBridge().then(() => {
@@ -12,6 +13,27 @@ Scratch.extensions.register(new (class VKBridgeExtension {
         }).catch(err => {
             console.error("VK Bridge error:", err);
         });
+
+        // Hide and restore event
+        window.addEventListener("message",  (event) => {
+            if (!event.data || !event.data.detail || !event.data.detail.type) return;
+            const type = event.data.detail.type;
+            if (type === "VKWebAppViewHide") {
+                this.viewHidden = true;
+            } else if (type === "VKWebAppViewRestore") {
+                this.viewHidden = false;
+            }
+        });
+
+        if (window.vkBridge && window.vkBridge.subscribe) {
+            window.vkBridge.subscribe((e) => {
+                if (e.detail.type === "VKWebAppViewHide") {
+                    this.viewHidden = true;
+                } else if (e.detail.type === "VKWebAppViewRestore") {
+                    this.viewHidden = false;
+                }
+            });
+        }
     }
 
     // Load function
@@ -646,6 +668,11 @@ Scratch.extensions.register(new (class VKBridgeExtension {
                             defaultValue: 0
                         }
                     }
+                },
+                {
+                    opcode: "isViewHidden",
+                    blockType: Scratch.BlockType.BOOLEAN,
+                    text: "Is app hidden?"
                 }
             ],
             menus: this.menus()
@@ -666,5 +693,9 @@ Scratch.extensions.register(new (class VKBridgeExtension {
 
     getUserName() {
         return this.userData.first_name || "Unknown";
+    }
+
+    isViewHidden() {
+        return this.viewHidden;
     }
 })());
