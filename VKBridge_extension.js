@@ -372,6 +372,55 @@ Scratch.extensions.register(new (class VKBridgeExtension {
     //
     //
 
+    // VK Storage
+
+    // Create a key - value
+    async storageSet({ KEY, VALUE }) {
+        try {
+            const data = await window.vkBridge.send("VKWebStorageSet", {
+                key: KEY,
+                value: VALUE
+            });
+            return data.result ? "Value saved" : "Error";
+        } catch (err) {
+            console.error("Storage error:", err);
+            return "Error";
+        }
+    }
+    // Get the key value
+    async storageGet({ KEY }) {
+        try {
+            const data = await window.vkBridge.send("VKWebStorageGet", {
+                keys: KEY
+            });
+            if (data.keys && data.keys.length > 0) {
+                return data.keys[0].value;
+            } else {
+                return "";
+            }
+        } catch (err) {
+            console.error("Storage error:", err);
+            return "Error";
+        }
+    }
+    // Get all variable names
+    async storageGetKeys({ COUNT, OFFSET }) {
+        try {
+            const data = await window.vkBridge.send("VKWebStorageGetKeys", {
+                count: parseInt(COUNT),
+                offset: parseInt(OFFSET)
+            });
+            if (data.keys && data.keys.length > 0) {
+                return data.keys.join(", ");
+            } else {
+                return "";
+            }
+        } catch (err) {
+            console.error("Storage error:", err);
+            return "Error";
+        }
+    }
+
     // Blocks
     getInfo() {
         return {
@@ -555,6 +604,47 @@ Scratch.extensions.register(new (class VKBridgeExtension {
                     text: "Download file [URL]",
                     arguments: {
                         URL: { type: Scratch.ArgumentType.STRING, defaultValue: "https://example.com/file.jpg" }
+                    }
+                },
+                {
+                    opcode: "storageSet",
+                    blockType: Scratch.BlockType.COMMAND,
+                    text: "Save key [KEY] to storage with value [VALUE]",
+                    arguments: {
+                        KEY: {
+                            type: Scratch.ArgumentType.STRING,
+                            defaultValue: "example"
+                        },
+                        VALUE: {
+                            type: Scratch.ArgumentType.STRING,
+                            defaultValue: "example_value"
+                        }
+                    }
+                },
+                {
+                    opcode: "storageGet",
+                    blockType: Scratch.BlockType.REPORTER,
+                    text: "Get value from storage by key [KEY]",
+                    arguments: {
+                        KEY: {
+                            type: Scratch.ArgumentType.STRING,
+                            defaultValue: "example"
+                        }
+                    }
+                },
+                {
+                    opcode: "storageGetKeys",
+                    blockType: Scratch.BlockType.REPORTER,
+                    text: "Get [COUNT] keys from storage with offset [OFFSET]",
+                    arguments: {
+                        COUNT: {
+                            type: Scratch.ArgumentType.NUMBER,
+                            defaultValue: 10
+                        },
+                        OFFSET: {
+                            type: Scratch.ArgumentType.NUMBER,
+                            defaultValue: 0
+                        }
                     }
                 }
             ],
