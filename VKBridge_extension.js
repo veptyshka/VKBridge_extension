@@ -3,6 +3,7 @@ Scratch.extensions.register(new (class VKBridgeExtension {
         this.initialized = false;
         this.userData = {};
         this.viewHidden = false;
+        this.bannerAdUpdated = false;
 
         // VK Bridge load and initialization
         this.loadVKBridge().then(() => {
@@ -14,6 +15,8 @@ Scratch.extensions.register(new (class VKBridgeExtension {
             console.error("VK Bridge error:", err);
         });
 
+        // Event subscriptions
+
         // Hide and restore event
         window.addEventListener("message",  (event) => {
             if (!event.data || !event.data.detail || !event.data.detail.type) return;
@@ -22,6 +25,8 @@ Scratch.extensions.register(new (class VKBridgeExtension {
                 this.viewHidden = true;
             } else if (type === "VKWebAppViewRestore") {
                 this.viewHidden = false;
+            } else if (type === "VKWebAppBannerAdUpdated") {
+                this.bannerAdUpdated = true;
             }
         });
 
@@ -154,7 +159,6 @@ Scratch.extensions.register(new (class VKBridgeExtension {
             return "Error";
         }
     }
-    // Get banner update
     // Close banner
     async hideBannerAd() {
         try {
@@ -510,6 +514,16 @@ Scratch.extensions.register(new (class VKBridgeExtension {
                     text: "Hide banner ad"
                 },
                 {
+                    opcode: "isBannerAdUpdatedFlag",
+                    blockType: Scratch.BlockType.BOOLEAN,
+                    text: "when banner ad updated"
+                },
+                {
+                    opcode: "bannerAdUpdatedHat",
+                    blockType: Scratch.BlockType.HAT,
+                    text: "When banner ad updated"
+                },
+                {
                     opcode: "checkBannerAdClosedByUser",
                     blockType: Scratch.BlockType.REPORTER,
                     text: "Check if banner was closed by user"
@@ -697,5 +711,19 @@ Scratch.extensions.register(new (class VKBridgeExtension {
 
     isViewHidden() {
         return this.viewHidden;
+    }
+
+    isBannerAdUpdatedFlag() {
+        const result = this.bannerAdUpdated;
+        this.bannerAdUpdated = false;
+        return result;
+    }
+
+    bannerAdUpdatedHat() {
+        if (this.bannerAdUpdated) {
+            this.bannerAdUpdated = false;
+            return true;
+        }
+        return false;
     }
 })());
