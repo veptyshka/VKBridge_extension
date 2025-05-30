@@ -246,7 +246,27 @@ Scratch.extensions.register(new (class VKBridgeExtension {
         }
     }
     // Get user's contact card
+    async getPersonalCard(type) {
+        try {
+            const data = await window.vkBridge.send("VKWebAppGetPersonalCard", {
+                type: [type] // phone/email/address
+            });
+            return data[type] || "No data";
+        } catch (err) {
+            console.error("Error getting personal card:", err);
+            return "Error";
+        }
+    }
     // Get user's phone number
+    async getPhoneNumber() {
+        try {
+            const data = await window.vkBridge.send("VKWebAppGetPhoneNumber");
+            return data.phone_number || "No number";
+        } catch (err) {
+            console.error("Error getting phone number:", err);
+            return "Error";
+        }
+    }
     // Get user's profile data
     // Show user's contacts
 
@@ -575,9 +595,35 @@ Scratch.extensions.register(new (class VKBridgeExtension {
                     }
                 },
                 {
+                    opcode: "getEmail",
+                    blockType: Scratch.BlockType.REPORTER,
+                    text: "get user email"
+                },
+                {
                     opcode: "getFriends",
                     blockType: Scratch.BlockType.REPORTER,
                     text: "Friend list"
+                },
+                {
+                    opcode: "getGeodata",
+                    blockType: Scratch.BlockType.REPORTER,
+                    text: "get user location"
+                },
+                {
+                    opcode: "getPersonalCard",
+                    blockType: Scratch.BlockType.REPORTER,
+                    text: "get [TYPE] from user contact card",
+                    arguments: {
+                        TYPE: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "personalCardFields"
+                        }
+                    }
+                },
+                {
+                    opcode: "getPhoneNumber",
+                    blockType: Scratch.BlockType.REPORTER,
+                    text: "getuser phone number"
                 },
                 {
                     opcode: "allowMessagesFromGroup",
@@ -711,18 +757,20 @@ Scratch.extensions.register(new (class VKBridgeExtension {
                     text: "Is app hidden?"
                 }
             ],
-            menus: this.menus()
-        };
-    }
-    menus() {
-        return {
-            bannerLocations: {
-                acceptReporters: false,
-                items: ["top", "bottom"]
+
+            menus: {
+                personalCardFields: {
+                    acceptReporters: true,
+                    items: ["phone", "email", "address"]
+                },
+                bannerLocations: {
+                    acceptReporters: false,
+                    items: ["top", "bottom"]
+                }
             }
         };
     }
-
+    
     getUserID() {
         return this.userData.id || "Unknown";
     }
