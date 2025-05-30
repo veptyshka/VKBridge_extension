@@ -267,8 +267,16 @@ Scratch.extensions.register(new (class VKBridgeExtension {
             return "Error";
         }
     }
-    // Get user's profile data
     // Show user's contacts
+    async openContacts() {
+        try {
+            const data = await window.vkBridge.send("VKWebAppOpenContacts");
+            return data.phone || "No contacts";
+        } catch (err) {
+            console.error("Error opening contacts:", err);
+            return "Error";
+        }
+    }
 
     // Communities
 
@@ -626,6 +634,11 @@ Scratch.extensions.register(new (class VKBridgeExtension {
                     text: "getuser phone number"
                 },
                 {
+                    opcode: "openContacts",
+                    blockType: Scratch.BlockType.REPORTER,
+                    text: "open user contacts"
+                },
+                {
                     opcode: "allowMessagesFromGroup",
                     blockType: Scratch.BlockType.COMMAND,
                     text: "Allow messages from group [GROUP_ID]",
@@ -770,7 +783,7 @@ Scratch.extensions.register(new (class VKBridgeExtension {
             }
         };
     }
-    
+
     getUserID() {
         return this.userData.id || "Unknown";
     }
