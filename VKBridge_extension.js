@@ -4,6 +4,7 @@ Scratch.extensions.register(new (class VKBridgeExtension {
         this.userData = {};
         this.viewHidden = false;
         this.bannerAdUpdated = false;
+        this.callLeft = false;
 
         // VK Bridge load and initialization
         this.loadVKBridge().then(() => {
@@ -16,29 +17,28 @@ Scratch.extensions.register(new (class VKBridgeExtension {
         });
 
         // Event subscriptions
+        const handleEventType = (type) => {
+            const handlers = {
+                VKWebAppViewHide: () => { this.viewHidden = true; },
+                VKWebAppViewRestore: () => { this.viewHidden = false; },
+                VKWebAppBannerAdUpdated: () => { this.bannerAdUpdated = true; },
+                VKWebAppCallLeft: () => { this.callLeft = true; }
+            };
 
-        // Hide and restore event
-        window.addEventListener("message",  (event) => {
-            if (!event.data || !event.data.detail || !event.data.detail.type) return;
-            const type = event.data.detail.type;
-            if (type === "VKWebAppViewHide") {
-                this.viewHidden = true;
-            } else if (type === "VKWebAppViewRestore") {
-                this.viewHidden = false;
-            } else if (type === "VKWebAppBannerAdUpdated") {
-                this.bannerAdUpdated = true;
-            }
-        });
+            if (handlers[type]) handlers[type]();
+        };
 
-        if (window.vkBridge && window.vkBridge.subscribe) {
+        if (window.vkBridge?.subscribe) {
             window.vkBridge.subscribe((e) => {
-                if (e.detail.type === "VKWebAppViewHide") {
-                    this.viewHidden = true;
-                } else if (e.detail.type === "VKWebAppViewRestore") {
-                    this.viewHidden = false;
-                }
+                const type = e.detail?.type;
+                if (type) handleEventType(type);
             });
         }
+
+        window.addEventListener("message", (event) => {
+            const type = event.data?.detail?.type;
+            if (type) handleEventType(type);
+        });
     }
 
     // Load function
@@ -497,6 +497,45 @@ Scratch.extensions.register(new (class VKBridgeExtension {
         }
     }
 
+    // Calls
+
+    // Start a call
+    async startCall() {
+        try {
+            const data = await window.vkBridge.send("VKWebAppCallStart");
+            if (data.result) {
+                return "Call started";
+            } else {
+                return "Failed to start a call";
+            }
+        } catch (err) {
+            console.error("Error starting a call:", err);
+            return "Error";
+        }
+    }
+    // Join call
+    async joinCall(link) {
+        try {
+            const data = await window.vkBridge.send("VKWebAppCallJoin", {
+                join_link: link
+            });
+            return data.result ? "Successfull" : "Failed";
+        } catch (err) {
+            console.error("Error joining a call:", err);
+            return "Error";
+        }
+    }
+    // Get call status
+    async getCallStatus() {
+        try {
+            const data = await window.vkBridge.send("VKWebAppCallGetStatus");
+            return data.result ? JSON.stringify(data) : "No active calls";
+        } catch (err) {
+            console.error("Error getting call status:", err);
+            return "Error";
+        }
+    }
+
     // Blocks
     getInfo() {
         return {
@@ -768,6 +807,32 @@ Scratch.extensions.register(new (class VKBridgeExtension {
                     opcode: "isViewHidden",
                     blockType: Scratch.BlockType.BOOLEAN,
                     text: "Is app hidden?"
+                },
+                {
+                    opcode: "startCall",
+                    blockType: Scratch.BlockType.COMMAND,
+                    text: "start a call"
+                },
+                {
+                    opcode: "joinCall",
+                    blockType: Scratch.BlockType.COMMAND,
+                    text: "join a call by link [LINK]",
+                    arguments: {
+                        LINK: {
+                            type: Scratch.ArgumentType.STRING,
+                            defaultValue: "hg0IXLVD7txQyFKMTLt2Zy4P6HmuXxcKGcfF0A8GznU"
+                        }
+                    }
+                },
+                {
+                    opcode: "getCallStatus",
+                    blockType: Scratch.BlockType.REPORTER,
+                    text: "get call status"
+                },
+                {
+                    opcode: "wasCallLeft",
+                    blockType: Scratch.BlockType.BOOLEAN,
+                    text: "user left call?"
                 }
             ],
 
@@ -808,5 +873,11 @@ Scratch.extensions.register(new (class VKBridgeExtension {
             return true;
         }
         return false;
+    }
+
+    wasCallLeft() {
+        const result = this.callLeft;
+        this.callLeft = false;
+        return result;
     }
 })());
