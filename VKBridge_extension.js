@@ -212,6 +212,15 @@ Scratch.extensions.register(new (class VKBridgeExtension {
     // Users
 
     // Get user's email
+    async getEmail() {
+        try {
+            const data = await window.vkBridge.send("VKWebAppGetEmail");
+            return data.email || "";
+        } catch (err) {
+            console.error("Error getting email:", err);
+            return "Error";
+        }
+    }
     // Get user's friend list
     async getFriends() {
         try {
@@ -223,6 +232,19 @@ Scratch.extensions.register(new (class VKBridgeExtension {
         }
     }
     // Get user's geodata
+    async getGeodata() {
+        try {
+            const data = await window.vkBridge.send("VKWebAppGetGeodata");
+            if (data.available) {
+                return `lat: ${data.lat}, long: ${data.long}`;
+            } else {
+                return "Location unavailable";
+            }
+        } catch (err) {
+            console.error("Error getting geodata:", err);
+            return "Error";
+        }
+    }
     // Get user's contact card
     // Get user's phone number
     // Get user's profile data
