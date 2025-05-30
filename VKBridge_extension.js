@@ -5,6 +5,7 @@ Scratch.extensions.register(new (class VKBridgeExtension {
         this.viewHidden = false;
         this.bannerAdUpdated = false;
         this.callLeft = false;
+        this.callFinished = false;
 
         // VK Bridge load and initialization
         this.loadVKBridge().then(() => {
@@ -22,7 +23,8 @@ Scratch.extensions.register(new (class VKBridgeExtension {
                 VKWebAppViewHide: () => { this.viewHidden = true; },
                 VKWebAppViewRestore: () => { this.viewHidden = false; },
                 VKWebAppBannerAdUpdated: () => { this.bannerAdUpdated = true; },
-                VKWebAppCallLeft: () => { this.callLeft = true; }
+                VKWebAppCallLeft: () => { this.callLeft = true; },
+                VKWebAppCallFinished: () => { this.callFinished = true; }
             };
 
             if (handlers[type]) handlers[type]();
@@ -833,6 +835,11 @@ Scratch.extensions.register(new (class VKBridgeExtension {
                     opcode: "wasCallLeft",
                     blockType: Scratch.BlockType.BOOLEAN,
                     text: "user left call?"
+                },
+                {
+                    opcode: "wasCallFinished",
+                    blockType: Scratch.BlockType.BOOLEAN,
+                    text: "call finished?"
                 }
             ],
 
@@ -878,6 +885,12 @@ Scratch.extensions.register(new (class VKBridgeExtension {
     wasCallLeft() {
         const result = this.callLeft;
         this.callLeft = false;
+        return result;
+    }
+
+    wasCallFinished() {
+        const result = this.callFinished;
+        this.callFinished = false;
         return result;
     }
 })());
