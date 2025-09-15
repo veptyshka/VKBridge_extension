@@ -4,3 +4,6 @@ Want to make a **game** for [VK](https://vk.com/games) platform, but *cannot cod
 
 
 VK Bridge documentation - https://dev.vk.com/en/bridge/overview
+
+
+The project still is WIP and could have some issues, feel free to open them or contribute!
